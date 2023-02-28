@@ -14,6 +14,7 @@ foci_caller <- function(df = cells,
                         midpointer_x = "XM_NUC_dna",
                         midpointer_y = "YM_NUC_dna", 
                         wiggle = 2,
+                        overlap_req = 2,
                         fileName = "NN_all_cells.csv"){
   cat("Running foci_caller...\n")
   
@@ -77,7 +78,8 @@ foci_caller <- function(df = cells,
   foci_compact(fileName = fileName,
                variable = variable,
                variable_subset = variable_subset,
-               variable_intensity = variable_intensity)
+               variable_intensity = variable_intensity,
+               overlap = overlap_req)
 }
 
 foci_compact <- function(fileName = "assigned.csv", 

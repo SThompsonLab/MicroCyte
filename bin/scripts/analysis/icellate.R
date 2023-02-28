@@ -8,6 +8,7 @@ icellate <- function(targetCells,
                      dMultiplier = 0.3,
                      verifySize = T,
                      fuse = F,
+                     marked = F,
                      heatIntensity = F,
                      heatColor = "inferno",
                      verifyImage = "overlay.png",
@@ -146,6 +147,16 @@ icellate <- function(targetCells,
         newPlot <- suppressWarnings(as.cimg(interim))
         newPlot <- cimg2magick(newPlot, rotate = T)
         image_write(newPlot, path = i, format = "png")
+        
+        if (marked){
+          interim[interim$x > newXPos-5 & interim$x < newXPos+5]$value <- 255
+          interim[interim$y > newYPos-5 & interim$y < newYPos+5]$value <- 255
+          newPlot <- suppressWarnings(as.cimg(interim))
+          newPlot <- cimg2magick(newPlot, rotate = T)
+          jimmy <- strsplit(i, ".png")[[1]][1]
+          jimmy <- paste0(jimmy, "_marked.png")
+          image_write(newPlot, path = jimmy, format = "png")
+        }
         
         if (heatIntensity){
           oldImage <- load.image(i)
