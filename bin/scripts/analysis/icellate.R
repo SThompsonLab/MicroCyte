@@ -149,8 +149,11 @@ icellate <- function(targetCells,
         image_write(newPlot, path = i, format = "png")
         
         if (marked){
-          interim[interim$x > newXPos-5 & interim$x < newXPos+5]$value <- 255
-          interim[interim$y > newYPos-5 & interim$y < newYPos+5]$value <- 255
+          crosshair <- cellLength/20
+          if (crosshair < 1){
+            crosshair <- 1
+          }
+          interim[(interim$x > newXPos-crosshair & interim$x < newXPos+crosshair & interim$y == newYPos) | (interim$y > newYPos-crosshair & interim$y < newYPos+crosshair & interim$x == newXPos),]$value <- 255
           newPlot <- suppressWarnings(as.cimg(interim))
           newPlot <- cimg2magick(newPlot, rotate = T)
           jimmy <- strsplit(i, ".png")[[1]][1]
@@ -327,6 +330,7 @@ lineAnalysis <- function(midX,
   
   # Now we'll pull out the images images to combine them into a single pixel dataframe
   pngList <- list.files(pattern = ".png")
+  pngList <- pngList[!grepl("_marked.png", pngList)]
   for (pngImage in pngList){
     # We'll ignore the overlay image because we may be using more than RBG
     if (pngImage != "overlay.png" & !grepl("heatMap_", pngImage)){
@@ -418,11 +422,11 @@ lineAnalysis <- function(midX,
       }
       linera <- ggplot(data = lineData, 
                        aes(x=pix, y = intensity, color=color))+
-        geom_step(size = 1.5)+
+        geom_step(linewidth = 1.5)+
         xlab("Relative pixel position")+
         ylab("Relative pixel intentsity")+
         theme_classic()+
-        theme(axis.line = element_line(colour = "black", size = 2),
+        theme(axis.line = element_line(colour = "black", linewidth = 2),
               axis.text = element_text(face = "bold", color = "black", size = 12),
               axis.title = element_text(face = "bold", color = "black", size = 20),
               legend.position = "top")
