@@ -10,36 +10,39 @@
 #This is the joinR function used to assign nuclear number to each ROI that may or may not be localized to the nucleus
 joinR <- function(y, x = "dna.csv"){
   # Files are opened
-  tagger <- read.csv(x)
+  tagman <- read.csv(x)
   fraction <- read.csv(y)
   # The number column is named, if not present
-  if (!"Number" %in% names(tagger)){
-    names(tagger)[1] <- "Number"
-    write.csv(tagger, file = x, row.names = FALSE)
+  if (!"Number" %in% names(tagman)){
+    names(tagman)[1] <- "Number"
+    write.csv(tagman, file = x, row.names = FALSE)
   }
   if (!"Number" %in% names(fraction)){
     names(fraction)[1] <- "Number"
     write.csv(fraction, file = y, row.names = FALSE)
   }
+
   # Now we skip fractions with empty lists
   if(nrow(fraction) > 0){
     #Default cellid is given
     fraction$cell <- "unknown"
     #Default distance is given
-    tagger$distance <- 0
+    tagman$distance <- 0
     fraction$NucDist <- 0
+    
     # The closest nucleus is calculated for each ROI
     for (i in 1:nrow(fraction)){
-      tagger$distance <- sqrt((tagger$X-fraction$X[i])^2+(tagger$Y-fraction$Y[i])^2)
-      closest <- min(tagger$distance)
+      tagman$distance <- sqrt((tagman$X-fraction$X[i])^2+(tagman$Y-fraction$Y[i])^2)
+      closest <- min(tagman$distance)
       fraction$NucDist[i] <- closest
-      fraction$cell[i] <- unique(subset(tagger, distance == closest)$Number)
+      fraction$cell[i] <- unique(subset(tagman, distance == closest)$Number)
       #If two or more nuclei are picked, it lets you know
       if (length(closest) > 1){
         print("PING! More than one nucleus at minimum distance. Something is wrong (probably)")
       }
     }
     write.csv(fraction, file = y, row.names = FALSE)
+    print(paste0("Saved as ", y))
   } else {
     print(paste0("No data found for file: ", y))
   }
@@ -52,29 +55,35 @@ imaGen <- function(directory="./",
                    wc = T){
   # The directory is set and a list of CSV's is generated
   directoryN <- paste0(directory, "/Anchor_extraction/")
-  directoryC <- paste0(directory, "NonAnchor_extraction/")
-  directoryP <- paste0(directory, "PeriAnchor_extraction/")
-
+  directoryC <- paste0(directory, "/NonAnchor_extraction/")
+  directoryP <- paste0(directory, "/PeriAnchor_extraction/")
+  
+  # Goes to the anchor directory
   setwd(directoryN)
+  # Generates the list of data files
   filez <- list.files(pattern = ".csv")
+  filez <- filez[!grepl("all.csv", filez)]
+  
+  # If there is an explicit anchor file, it uses that, otherwise it expects dna or asks the user to define it
   if ("anchor.csv" %in% filez){
     anchorName <- "anchor"
   } else if ("dna.csv" %in% filez){
     anchorName <- "dna"
   } else {
+    print(filez)
     anchorName <- readline(prompt = "Anchor file not detected. Which file should be the anchor?")
   }
-  # The first file is opened to serve as a template
-  if(!grepl("_all.csv", filez[1])){
-    cells <- read.table(filez[1], sep = ",", header = TRUE)
-  } else(
-    cells <- read.table(filez[2], sep = ",", header = TRUE)
-  )
   
-  # If the csv name is not simply the target name (colorz == F), then you will be asked to name a target for each image
+  # The first file is opened to serve as a template
+  # it doesn't matter which file, since they all share the same order based on the ancher-dependent extraction
+  cells <- read.csv(filez[1])
+  
+  # If the csv name is not simply the target name (colorz == F), 
+  # then you will be asked to name a target for each image
+  
   # REMEMBER: One of the targets must be 'dna'
   if(colorz == F){
-    cat("REMEMBER: One of these color's must be labeled 'dna'")
+    cat("REMEMBER: One of these color's must be match the given anchor name.")
     cat("\n")
     cat(paste0("This file is ", filez[1]))
     cat("\n")
@@ -84,21 +93,26 @@ imaGen <- function(directory="./",
     colo <- substr(filez[1], 1, nchar(filez[1])-4)
   }
   
+  # The area is artificially increased to make small numbers bigger
   cells$Area <- cells$Area*100
+  
+  # The template's columns are appended with the anchor marker and the 'color
   names(cells) <- paste0(names(cells), "_ANC_", colo)
-  # The first column with designated as the cell number which is dictated by the nucleus and is consistent across all downstream applications
+  
+  # The first column with designated as the cell number which is dictated by the nucleus 
+  # and is consistent across all downstream applications
   names(cells)[1] <- "Number"
+  
   # The label is removed as this isn't required after 'colo' labeling
-  cells<-cells[,-2]
-  # Default area is quite small, so its boosted to make the numbers more "real"
+  cells <- cells[,-2]
   
   # The rest of the csv's in the Nuclear directory are opened and cbinded to the first set
   for (i in filez[2:length(filez)]){
     # Already bound csv's (_all tagged) are ignored
     if (!grepl("_all.csv", i)){
-      interim <- read.table(i, sep = ",", header = TRUE)
+      interim <- read.csv(i)
       if(colorz == F){
-        cat("REMEMBER: One of these color's must be labeled 'dna'")
+        cat("REMEMBER: One of these color's must match the given anchor name")
         cat("/n")
         cat(paste0("This file is ", i))
         cat("/n")
@@ -110,48 +124,36 @@ imaGen <- function(directory="./",
       cells <- cbind(cells, interim[,4:8], interim[,11:12], interim[,15:16])
     }
   }
+  # The anchor dependent file is saved
   filnam <- yL
+  xoo <- paste0(filnam,"_ANC_all.csv")
   write.csv(cells, file = paste0(filnam,"_ANC_all.csv"), row.names = FALSE)
-  xoo <- list.files(pattern = anchorName)
   setwd("../")
   
 #Now that the nuclear data is collected, the ROI data will be parsed and added
-  
-  # First, you navigate to the wholeCell folder
+  # First, you navigate to the NonAnchor file folder
   if(wc==T){
+    cat("Parsing anchor-indepedent data...\n")
     setwd(directoryC)
+    
   # Then you get the list of files
     filez <- list.files()
-  # Then you designate which tagger file to use. If colorz == T, the script assumes your file is called dna.csv and uses the same csv as found in the Nuclear folder
-    if(colorz==F){
-      pathy <- getwd()
-      cat(paste0("Current directory is ", pathy))
-      cat("\n")
-      tagger <- readline(prompt = "What is the path to the anchor file: ")
-    } else{
-      tagger <- paste0("../Anchor_extraction/", xoo)
-    }
-    # Every ROI is designated a nucleus number
+    filez <- filez[!grepl("all.csv", filez)]
+    
+    # Every ROI is designated an anchor number and the file is saved
     for (j in filez){
-      if (!grepl("_all.csv", j)){
-        joinR(j, xoo)
-      }
+      joinR(j, paste0("../Anchor_extraction/", anchorName, ".csv"))
     }
-    # The tagger file is opened
-    cells <- read.csv(tagger)
-    # Default area is quite small, so its boosted to make the numbers more "real"
-    cells$Area <- cells$Area*100
-    # The dna values are labeled as such
-    names(cells) <- paste0(names(cells), "_WC_dna")
-    # The first column with designated as the cell number which is dictated by the nucleus and is consistent across all downstream applications
-    names(cells)[1] <- "Number"
-    # The label is removed as this isn't required after 'colo' labeling
-    cells<-cells[,-2]
-    #Each ROI file is summarized and added to the nucleus data
+    
+    # The anchor-extraction file is opened
+    cells <- read.csv(paste0("../Anchor_extraction/", xoo))
+
+    #Each ROI file is summarized and added to the anchor data
     for (i in filez){
+      # First let smake sure they have labels (they do)
       if (!grepl("_all.csv", i)){
         if(colorz == F){
-          cat("REMEMBER: One of these color's must be labeled 'dna'")
+          cat("REMEMBER: One of these color's must match the given anchor'")
           cat("\n")
           cat(paste0("This file is ", i))
           cat("\n")
@@ -160,27 +162,34 @@ imaGen <- function(directory="./",
           colo <- substr(i, 1, nchar(i)-4)
         }
       }
-      # Temporary dataset is made for easy column labeling
+      
+      # Temporary dataset is made for easy column labeling and given summary columns
       interim <- cells
-      # The ROI files is opened
+      interim$ROI_Num <- 0
+      interim$ROI_Area <- 0
+      interim$ROI_Mean <- 0
+      interim$ROI_Stdev <- 0
+      interim$ROI_Mode <- 0
+      interim$ROI_Perimeter <- 0
+      interim$ROI_IntDen <- 0
+      interim$ROI_IntTotal <- 0
+      interim$ROI_NucDist <- 0
+      
+      # The ROI files is opened as 'fraction'
       if (!grepl("_all.csv", i)){
         fraction <- read.csv(i)
+        
+        # if there are ROI values, it continues
         if (nrow(fraction > 0)){
-          #      write.csv(fraction, file = i, row.names = F)
           #Each nucleus number is analyzed for ROI's designated to it
           for (j in 1:nrow(interim)){
-            interim$ROI_Num[j] <- 0
-            interim$ROI_Area[j] <- 0
-            interim$ROI_Mean[j] <- 0
-            interim$ROI_Stdev[j] <- 0
-            interim$ROI_Mode[j] <- 0
-            interim$ROI_Perimeter[j] <- 0
-            interim$ROI_IntDen[j] <- 0
-            interim$ROI_IntTotal[j] <- 0
-            interim$ROI_NucDist[j] <- 0
+            
             if(interim$Number[j] %in% unique(fraction$cell)){
               # The ROIs that are assigned to a particular nucleus number are subsetted
               hitz <- subset(fraction, cell == interim$Number[j])
+              if (colo != anchorName){
+                cat(paste0("found ", nrow(hitz), " ", colo, " ROIS for anchor number ", interim$Number[j], "\n"))
+              }
               
               # Individual ROI nuclear distances are calculated
               #The number of ROIS assigned to that cell
@@ -211,6 +220,7 @@ imaGen <- function(directory="./",
               interim$ROI_NucDist[j] <- mean(hitz$NucDist)
             } 
           }
+          
           # A target tag is added for later identification
           names(interim) <- paste0(names(interim), "_", colo)
           # The new variables are added to their cell ID
@@ -218,6 +228,8 @@ imaGen <- function(directory="./",
         }
       }
     }
+    write.csv(cells, file = paste0(filnam, "_WC_all.csv"), row.names = F)
+    
     # Now begins generating a final ROI file for funnsies
     interim <- read.csv(filez[1])
     colo <- substr(filez[1], 1, nchar(i)-2)
@@ -245,10 +257,10 @@ imaGen <- function(directory="./",
         }
       }
     }
-    
+
     #Now things get saved
     write.csv(interim, file = paste0("../../",filnam, "_ROI_all.csv"), row.names = F)
-    write.csv(cells, file = paste0(filnam, "_WC_all.csv"), row.names = F)
+    write.csv(cells, file = paste0("../../", filnam, "_WN_all.csv"), row.names = F)
     setwd("../")
   }
   #This ends wc collection------------------------------------
@@ -258,31 +270,25 @@ imaGen <- function(directory="./",
     setwd(directoryP)
     # Then you get the list of files
     filez <- list.files()
-    # Then you designate which tagger file to use. If colorz == T, the script assumes your file is called dna.csv and uses the same csv as found in the Nuclear folder
-    if(colorz==F){
-      pathy <- getwd()
-      cat(paste0("Current directory is ", pathy))
-      cat("\n")
-      tagger <- readline(prompt = "What is the path to the dna file: ")
-    } else{
-      tagger <- paste0("../Anchor_extraction/", xoo)
+    filez <- filez[!grepl("_all.csv", filez)]
+    
+    # If the ROI-independent files have been called, that's what we want to pull
+    if (wc){
+      nucleoid <- paste0("../../", filnam, "_WN_all.csv")
+    } else {
+      nucleoid <- paste0("../Anchor_extraction/", filnam, "_ANC_all.csv")
     }
+    print(nucleoid)
+
     # Every ROI is designated a nucleus number
     for (j in filez){
-      if (!grepl("_all.csv", j)){
-        joinR(j, xoo)
-      }
+      joinR(j, paste0("../Anchor_extraction/", anchorName, ".csv"))
     }
+    print("Peris joined")
+    
     # The tagger file is opened
-    cells <- read.csv(tagger)
-    # Default area is quite small, so its boosted to make the numbers more "real"
-    cells$Area <- cells$Area*100
-    # The dna values are labeled as such
-    names(cells) <- paste0(names(cells), "_PERI_dna")
-    # The first column with designated as the cell number which is dictated by the nucleus and is consistent across all downstream applications
-    names(cells)[1] <- "Number"
-    # The label is removed as this isn't required after 'colo' labeling
-    cells<-cells[,-2]
+    cells <- read.csv(nucleoid)
+
     #Each ROI file is summarized and added to the nucleus data
     for (i in filez){
       if (!grepl("_all.csv", i)){
@@ -369,30 +375,39 @@ imaGen <- function(directory="./",
     #Now things get saved
     write.csv(interim, file = paste0("../../",filnam, "_PERI_all.csv"), row.names = F)
     write.csv(cells, file = paste0(filnam, "_PN_all.csv"), row.names = F)
+    write.csv(cells, file = paste0("../../", filnam, "_WN_all.csv"), row.names = F)
     setwd("../")
   }
   #-------------------------------------------------------------------------
   # This ends the PERI_all collection
 
-  #Now that we have a nuclear dataset and a WC dataset, we might as well put it all together...
-  nucka <- paste0("Anchor_extraction/", filnam, "_ANC_all.csv")
-  nuke <- read.csv(nucka)
-  if(wc==T & peri==T){
-    wucka <- paste0("NonAnchor_extraction/", filnam, "_WC_all.csv")
-    wuke <- read.csv(wucka)
-    pucka <- paste0("PeriAnchor_extraction/", filnam, "_PN_all.csv")
-    puke <- read.csv(pucka)
-    cells <- cbind(nuke, puke[,22:ncol(puke)], wuke[,22:ncol(wuke)])
-  }
-  if(wc == T){
-    wucka <- paste0("NonAnchor_extraction/", filnam, "_WC_all.csv")
-    wuke <- read.csv(wucka)
-    cells <- cbind(nuke, wuke[,22:ncol(wuke)])
-  }
-  if(peri==T){
-    pucka <- paste0("PeriAnchor_extraction/", filnam, "_PN_all.csv")
-    puke <- read.csv(pucka)
-    cells <- cbind(nuke, puke[,22:ncol(puke)])
+  # #Now that we have a nuclear dataset and a WC dataset, we might as well put it all together...
+  # nucka <- paste0("Anchor_extraction/", filnam, "_ANC_all.csv")
+  # nuke <- read.csv(nucka)
+  # if(wc==T & peri==T){
+  #   print("Appending peri- and non-anchor extractions...")
+  #   wucka <- paste0("NonAnchor_extraction/", filnam, "_WC_all.csv")
+  #   wuke <- read.csv(wucka)
+  #   pucka <- paste0("PeriAnchor_extraction/", filnam, "_PN_all.csv")
+  #   puke <- read.csv(pucka)
+  #   cells <- cbind(nuke, puke[,22:ncol(puke)], wuke[,22:ncol(wuke)])
+  # }
+  # if(wc == T){
+  #   print("Appending non-anchor extractions...")
+  #   wucka <- paste0("NonAnchor_extraction/", filnam, "_WC_all.csv")
+  #   wuke <- read.csv(wucka)
+  #   cells <- cbind(nuke, wuke[,22:ncol(wuke)])
+  # }
+  # if(peri==T){
+  #   print("Appending peri-anchor extractions...")
+  #   pucka <- paste0("PeriAnchor_extraction/", filnam, "_PN_all.csv")
+  #   puke <- read.csv(pucka)
+  #   cells <- cbind(nuke, puke[,22:ncol(puke)])
+  # }
+  if (wc | peri){
+    cells <- read.csv(paste0("../", filnam, "_WN_all.csv"))
+  } else {
+    cells <- read.csv(paste0("Anchor_extraction/", filnam,"_ANC_all.csv"))
   }
   
   if(peri==T){
@@ -462,7 +477,7 @@ for (xL in xList){
         if("NonAnchor_extraction" %in% checkList){
           wcGo <- TRUE
         }
-        if (length(list.files(path = "Anchor_extraction/", pattern = "NUC_all.csv")) == 0){
+        if (length(list.files(path = "Anchor_extraction/", pattern = "ANC_all.csv")) != 0){
           imaGen(peri = periGo,
                  wc = wcGo)
           print(paste0("Combining data from image ", yL))
