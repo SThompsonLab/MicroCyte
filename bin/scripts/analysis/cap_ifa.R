@@ -10,9 +10,9 @@ suppressPackageStartupMessages(library(hash))
 foci_caller <- function(df = cells,
                         variable = "n",
                         variable_subset = "Positive",
-                        variable_intensity = "Mean_NUC_n",
-                        midpointer_x = "XM_NUC_dna",
-                        midpointer_y = "YM_NUC_dna", 
+                        variable_intensity = "Mean_ANC_n",
+                        midpointer_x = "XM_ANC_dna",
+                        midpointer_y = "YM_ANC_dna", 
                         wiggle = 2,
                         overlap_req = 2,
                         fileName = "NN_all_cells.csv"){
@@ -85,7 +85,7 @@ foci_caller <- function(df = cells,
 foci_compact <- function(fileName = "assigned.csv", 
                          variable = "n",
                          variable_subset = "Positive",
-                         variable_intensity = "Mean_NUC_n",
+                         variable_intensity = "Mean_ANC_n",
                          overlap = 2){
   cat(paste0("Running foci_compact from ", fileName, ".\n"))
   cells_new <- read.csv(paste0("data/",fileName))
@@ -163,16 +163,11 @@ foci_compact <- function(fileName = "assigned.csv",
     cells_new[cells_new["focus"] == a,]["focal_size"] <- c
   }
   #Find the right name
-  uni_x_name <- names(cells_new)[grepl("X_NUC", names(cells_new))][1]
-  uni_y_name <- names(cells_new)[grepl("Y_NUC", names(cells_new))][1]
+  uni_x_name <- names(cells_new)[grepl("X_ANC", names(cells_new))][1]
+  uni_y_name <- names(cells_new)[grepl("Y_ANC", names(cells_new))][1]
   
-#  cells_new$core_prob <- cells_new$NNs/cells_new$focal_size
-#  cells_new$core_prob_norm <- 0
+
   cells_new$distance_to_center <- NA
-#  cells_new$core_dist_norm <- 0
-#  cells_new$top_core_distance <- F
-#  cells_new[is.na(cells_new$core_prob),]$core_prob <- 0
-  
   cells_new$intensity_rank <- 0
   cells_new$distance_rank <- 0
   cells_new$nn_rank <- 0
@@ -189,6 +184,15 @@ foci_compact <- function(fileName = "assigned.csv",
     
     ticket <- ticket[order(-ticket$NNs),]
     ticket$nn_rank <- c(1:nrow(ticket))
+    if (max(ticket$nn_rank) > 1 & unique(ticket$focus) != 0){
+      for (rowrank in c(1:(nrow(ticket)-1))){
+        if (ticket[rowrank,]$NNs == ticket[rowrank+1,]$NNs){
+          ticket[rowrank+1,]$nn_rank <- ticket[rowrank,]$nn_rank
+        } else {
+          ticket[rowrank+1,]$nn_rank <- ticket[rowrank,]$nn_rank+1
+        }
+      }
+    }
     
     ticket <- ticket[order(-unlist(ticket[variable_intensity])),]
     ticket$intensity_rank <- c(1:nrow(ticket))
@@ -197,9 +201,10 @@ foci_compact <- function(fileName = "assigned.csv",
     distance_var <- var(ticket$distance_to_center)
     intensity_var <- var(unlist(ticket[variable_intensity]))
     total_var <- nn_var+distance_var+intensity_var
-    nn_var <- nn_var/total_var
-    distance_var <- distance_var/total_var
-    intensity_var <- intensity_var/total_var
+    
+    nn_var <- 1+nn_var/total_var
+    distance_var <- 1+distance_var/total_var
+    intensity_var <- 1+intensity_var/total_var
     
     ticket$intensity_rank <- ticket$intensity_rank*intensity_var
     ticket$distance_rank <- ticket$distance_rank*distance_var
@@ -268,8 +273,8 @@ plaque_data_collect <- function(){
                                   "percent_S" = 100*nrow(subset(tittering, edu != "Negative"))/nrow(tittering),
                                   "low_prob" = min(tittering$core_prob),
                                   "high_prob" = max(tittering$core_prob),
-                                  "Mean_x_position" = mean(tittering$X_NUC_dna),
-                                  "Mean_y_position" = mean(tittering$Y_NUC_dna))
+                                  "Mean_x_position" = mean(tittering$X_ANC_dna),
+                                  "Mean_y_position" = mean(tittering$Y_ANC_dna))
       } else {
         interim <- data.frame("image" = unique(tittering$image),
                               "time" = unique(tittering$time),
@@ -284,8 +289,8 @@ plaque_data_collect <- function(){
                               "percent_S" = 100*nrow(subset(tittering, edu != "Negative"))/nrow(tittering),
                               "low_prob" = min(tittering$core_prob),
                               "high_prob" = max(tittering$core_prob),
-                              "Mean_x_position" = mean(tittering$X_NUC_dna),
-                              "Mean_y_position" = mean(tittering$Y_NUC_dna))
+                              "Mean_x_position" = mean(tittering$X_ANC_dna),
+                              "Mean_y_position" = mean(tittering$Y_ANC_dna))
         plaque_info <- rbind(plaque_info, interim)
       }
     }
