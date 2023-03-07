@@ -194,8 +194,8 @@ modthequad <- function(xi = 1.5,
   ymax <- max(df[py])
   qqmod <<- qq
   qqmod <<- qqmod+
-    geom_hline(yintercept = as.numeric(yi), color = "red", linetype = "dashed", size = 2)+
-    geom_vline(xintercept = as.numeric(xi), color = "red", linetype = "dashed", size = 2)+
+    geom_hline(yintercept = as.numeric(yi), color = "red", linetype = "dashed", linewidth = 2)+
+    geom_vline(xintercept = as.numeric(xi), color = "red", linetype = "dashed", linewidth = 2)+
     annotate("text", x = xmin, y = ymax, label = paste0("Q1: ", as.character(format(round((qt1/todos*100), 2), nsmall = 2)), "%"))+
     annotate("text", x = xmax, y = ymax, label = paste0("Q2: ", as.character(format(round((qt2/todos*100), 2), nsmall = 2)), "%"))+
     annotate("text", x = xmin, y = ymin, label = paste0("Q3: ", as.character(format(round((qt3/todos*100), 2), nsmall = 2)), "%"))+
