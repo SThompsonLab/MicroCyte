@@ -196,10 +196,10 @@ modthequad <- function(xi = 1.5,
   qqmod <<- qqmod+
     geom_hline(yintercept = as.numeric(yi), color = "red", linetype = "dashed", linewidth = 2)+
     geom_vline(xintercept = as.numeric(xi), color = "red", linetype = "dashed", linewidth = 2)+
-    annotate("text", x = xmin, y = ymax, label = paste0("Q1: ", as.character(format(round((qt1/todos*100), 2), nsmall = 2)), "%"))+
-    annotate("text", x = xmax, y = ymax, label = paste0("Q2: ", as.character(format(round((qt2/todos*100), 2), nsmall = 2)), "%"))+
-    annotate("text", x = xmin, y = ymin, label = paste0("Q3: ", as.character(format(round((qt3/todos*100), 2), nsmall = 2)), "%"))+
-    annotate("text", x = xmax, y = ymin, label = paste0("Q4: ", as.character(format(round((qt4/todos*100), 2), nsmall = 2)), "%"))
+    annotate("text", x = xmin*1.05, y = ymax*0.95, label = paste0("Q1: ", as.character(format(round((qt1/todos*100), 2), nsmall = 2)), "%"))+
+    annotate("text", x = xmax*0.95, y = ymax*0.95, label = paste0("Q2: ", as.character(format(round((qt2/todos*100), 2), nsmall = 2)), "%"))+
+    annotate("text", x = xmin*1.05, y = ymin*1.05, label = paste0("Q3: ", as.character(format(round((qt3/todos*100), 2), nsmall = 2)), "%"))+
+    annotate("text", x = xmax*0.95, y = ymin*1.05, label = paste0("Q4: ", as.character(format(round((qt4/todos*100), 2), nsmall = 2)), "%"))
   print(quads)
   if(graphit==T){
     print(qqmod+geom_density_2d())
@@ -234,62 +234,6 @@ cull <- function(){
   }
   grapho(cells)
   cat("\n")
-}
-
-#----------------------------------------------------------------------------
-#This function performs ergodic analysis on the graph, but can currently only do it along the x-axis, with a y-axis cut-off value.
-#eGod will take your scatterplot and perform ergodic analysis on an x-axis
-
-eGod <- function(df=cells){
-  rate <<- as.integer(readline(prompt = "What is the rate value: "))
-  bind <<- as.integer(readline(prompt = "How many bins: "))
-  bn <<- as.integer(readline(prompt = "Remove number of final bins: "))
-  hig <<- max(df[px])
-  low <<- min(df[px])
-  divine <<- (hig-low)/(bind-1)
-  yt <<- as.integer(readline(prompt = "What is your S phase cutoff: "))
-  binner <<- matrix(nrow = nrow(df), ncol = 1)
-  
-  sPhase <<- 0
-  binner <<- c()
-  binSize <<- c()
-  
-  for (i in 1:(bind-bn)){
-    binSize[i] <<- low+(i*divine)
-  }
-  for (i in 1:nrow(df)){
-    if (df[i,py]>yt){
-      binner[i] <<- floor((df[i,px]-low)/divine)+1
-      sPhase <<- sPhase+1
-    }else{
-      binner[i] <<- 0
-    }
-  }
-  tot <- nrow(df)
-  
-  CpB <<- c()
-  for (i in 1:(bind-bn)){
-    ghetto <- sum(binner == i)
-    CpB[i] <<- ghetto
-  }
-  
-  a <- log(2)/rate
-  Ft <- sPhase/tot
-  bRate <<- c()
-  for (i in 1:length(CpB)){
-    bRate[i] <<- a*((2-Ft)/(CpB[i]/sPhase))
-  }
-  binNum <- c()
-  for (i in 1:length(CpB)){
-    binNum[i] <- i
-  }
-  justice <<- data.frame(binNum, binSize, CpB, bRate)
-  hh <<- ggplot(justice, aes(binSize))+
-    geom_bar(aes(weight=bRate))+
-    xlab("Size of binning variable")+
-    ylab("Rate")
-  print(justice)
-  print(hh)
 }
 
 #----------------------------------------------------------------
