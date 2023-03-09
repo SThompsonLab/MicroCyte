@@ -339,10 +339,14 @@ while (TRUE) {
     scriptList <- list.files("bin/scripts/analysis/", pattern = ".R")
     print("Sourcing the analysis scripts...")
     cat("\n")
-    for(scriptin in scriptList){
-      cat(paste0("Sourcing script: ", scriptin))
-      cat("\n")
-      source(paste0("bin/scripts/analysis/", scriptin))
+    if (length(scriptList) == 0){
+      print("No scripts detected. Make sure you are in the right directory and try again.")
+    } else {
+      for(scriptin in scriptList){
+        cat(paste0("Sourcing script: ", scriptin))
+        cat("\n")
+        source(paste0("bin/scripts/analysis/", scriptin))
+      }
     }
     cat("\n")
     print("Good luck with your analysis!")
