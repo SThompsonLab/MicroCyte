@@ -468,6 +468,7 @@ for (xL in xList){
     print(paste0("Running ImaGen on the ", xL," folder:"))
     yList <- list.files()
     for(yL in yList){
+      #print(yL)
       if(!grepl("_all.csv", yL) & yL != "Thumbs.db"){
         setwd(paste0(yL, "/PNGS/"))
         checkList <- list.files()
@@ -477,7 +478,7 @@ for (xL in xList){
         if("NonAnchor_extraction" %in% checkList){
           wcGo <- TRUE
         }
-        if (length(list.files(path = "Anchor_extraction/", pattern = "ANC_all.csv")) != 0){
+        if (length(list.files(path = "Anchor_extraction/", pattern = "ANC_all.csv")) == 0){
           imaGen(peri = periGo,
                  wc = wcGo)
           print(paste0("Combining data from image ", yL))
