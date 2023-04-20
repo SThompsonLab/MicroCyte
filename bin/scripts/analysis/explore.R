@@ -8,13 +8,16 @@ explore <- function(fileName = cells,
                     vSize = F,
                     random = T,
                     extraMetrics = F,
+                    line_analyses = F,
                     saveFile = "data/experiment_explored.csv"){
   
   #First, filename is a dataset, it is used, otherwise it is opened as a csv. If the file is not a csv, an error is printed
   if(is.data.frame(fileName)){
     dFrame <- fileName
   } else if (grepl(".csv", fileName)){
-    dFrame <- read.csv(file = fileName)
+    cat(paste0("Opening file: ", fileName, "...\n"))
+    dFrame <- read_csv(file = fileName)
+    #print(nrow(dFrame))
   } else {
     print("File or dataset not recognized.")
   }
@@ -24,6 +27,7 @@ explore <- function(fileName = cells,
   
   # if categories is true, you are asked home many categories to separate the data by
   if(categories == T){
+    #print("1")
     catNum <- as.numeric(readline(prompt = "How many categories would you like to explore: "))
     if (catNum > 0){
       # The names to choose from are listed
@@ -44,25 +48,32 @@ explore <- function(fileName = cells,
       # Now that we have groups of unique category values, we cahnge the sortBy to use the lists rather than a name_id
       sortBy <- "placeHolder"
     }
+    #print("1b")
   } else {
+    #print("1a")
     catNum <- 0
   }
   
   # a new dataframe is generated to store all the frequency data by using the unique values of the placeholder variable
   datum <- data.frame("name_id" = unique(unlist(dFrame[sortBy])))
+  #print("2")
   
   # We read the schema to get metadata so we don't have to get it later
   schema <- read.csv(scheme)
+  #print("schema read")
   # store the meta names
   metaNames <- names(schema)[7:(length(names(schema))-1)]
+  #print(metaNames)
   # Add the metadata to the final dataset row by row
   for (i in metaNames){
+    #print(i)
     datum[i] <- "Holder"
     for(j in 1:nrow(datum)){
       target <- unique(unlist(dFrame[dFrame$placeHolder == datum["name_id"][j,],][i]))
       datum[i][j,] <- target
     }
   }
+  #print("3")
   
   # We create another id that is sum of all the metadata so we can pull total data later
   if (categories == T & catNum > 0){
@@ -74,6 +85,7 @@ explore <- function(fileName = cells,
       }
     }
     datum$totalName <- check
+    #print("4a")
   }
   
   #This pulls the category data per population and adds the population's unique variable for that category
@@ -85,6 +97,7 @@ explore <- function(fileName = cells,
         datum[b][c,] <- strsplit(datum[b][c,], "_")[[1]][1]
       }
     }
+    #print("4b")
   }
   
   #Now we pull the total values for each
@@ -100,17 +113,20 @@ explore <- function(fileName = cells,
                  verifySize = vSize,
                  heatIntensity = icellate_heatMap,
                  samplingNumber = nrow(dFrame[dFrame["placeHolder"]==totalSet,]), 
-                 randomize = random)
+                 randomize = random, 
+                 lineAnalyses = line_analyses)
       } else {
         icellate(targetCells = dFrame[dFrame["placeHolder"]==totalSet,], 
                  folderName = totalSet, 
                  verifySize = vSize, 
                  heatIntensity = icellate_heatMap,
                  samplingNumber = icellate, 
-                 randomize = random)
+                 randomize = random,
+                 lineAnalyses = line_analyses)
       }
     }
   }
+  #print("5")
   if (categories == T & catNum > 0){
     datum$subsetTotal <- datum$total
     datum$total <- 0
@@ -119,10 +135,12 @@ explore <- function(fileName = cells,
       datum[datum$totalName == totalSet,]$total <- totalCount
     }
     datum$subsetPercent <- round(100*datum$subsetTotal/datum$total, 2)
+    #print("5a")
   }
 
   
   if (cellCycle == T){
+    #print("6a")
     datum$MDI <- NA
     datum$sPhase <- NA
     datum$G1 <- NA
@@ -146,10 +164,11 @@ explore <- function(fileName = cells,
       datum[datum$name_id ==a,]$rS_MFI <- mean(set[set$edu == "Positive" & set$ploidy != "2N",]$edu_norm)
       datum[datum$name_id ==a,]$rS_MDI <- mean(set[set$edu == "Positive" & set$ploidy != "2N",]$dna_norm)
     }
+    #print("6b")
   }
   
   if (extraMetrics != F){
-    print(names(dFrame))
+    #print(names(dFrame))
     metricsNumber <- as.numeric(readline(prompt = "How many extra variables would you like to add: "))
     metricsTab <- data.frame("metricNumber" = c(1:metricsNumber), "metricName" = "holder")
     for (i in 1:nrow(metricsTab)){
@@ -168,9 +187,10 @@ explore <- function(fileName = cells,
         datum[datum$name_id ==a,][paste0("Median_", metric)] <- median(as.numeric(unlist(set[metric])))
       }
     }
+    #print("7")
   }
   
-  
+  #print("8")
   if (file.exists(saveFile)){
     concatAway <- readline(prompt = "Save file with same name detected. Concatenate? (Y/n): ")
     if(concatAway != "n"){
@@ -180,5 +200,6 @@ explore <- function(fileName = cells,
       saveFile <- readline(prompt = "What should the name of the new file be: ")
     }
   }
+  #print("9")
   write.csv(datum, file = saveFile, row.names = F)
 }

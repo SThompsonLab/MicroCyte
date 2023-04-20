@@ -89,8 +89,8 @@ while (TRUE) {
     if (contun != "n"){
       print("Concatenating image sets...")
       source("bin/scripts/scripts/6_concato.R")
-      normal <- readline(prompt = "Should the numeric values be normalized among image sets (Y/n)? ")
-      if (normal != "n"){
+      normal <- readline(prompt = "Should the numeric values be normalized among image sets (y/N)? ")
+      if (normal != "y"){
         concato(normalization = F)
       } else {
         concato()
@@ -148,14 +148,14 @@ while (TRUE) {
 #Runs concato and finish chain
     print("Concatenating image sets...")
     source("bin/scripts/scripts/6_concato.R")
-    normal <- readline(prompt = "Should the numeric values be normalized among image sets (Y/n)? ")
-    if (normal != "n"){
+    normal <- readline(prompt = "Should the numeric values be normalized among image sets (y/N)? ")
+    if (normal != "y"){
       concato(normalization = F)
     } else {
       concato()
     }
     print("Image sets combined")
-    contun <- readline(prompt = "Would you like to now run Unite (Y/n)? ")
+    contun <- readline(prompt = "Would you like to now run Unite (n/Y)? ")
     if (contun != "n"){
       print("Uniting sample datasets...")
       source("bin/scripts/scripts/7_unite.R")
@@ -306,11 +306,8 @@ while (TRUE) {
     
     print("Concatenating image sets...")
     source("bin/scripts/scripts/6_concato.R")
-    if (normal != "n"){
-      concato(normalization = F)
-    } else {
-      concato()
-    }
+    concato(normalization = F)
+    
     print("Image sets combined")
     
     print("Uniting sample datasets...")
