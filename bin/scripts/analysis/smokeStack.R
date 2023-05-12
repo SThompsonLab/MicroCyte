@@ -10,7 +10,7 @@ smokeStack <- function(df = cells,
                        minBinNumber = 100,
                        lims = F,
                        facet = F,
-                       facet_within =T,
+                       facet_within = T,
                        fixedCoord = T,
                        mid_set=F,
                        saveFile = "figures/coloredBar.svg",
@@ -141,14 +141,18 @@ smokeStack <- function(df = cells,
           if(nrow(new_interim[new_interim$bin == j,]) < minBinNumber){
             interim_magic[i][j,] <- NA
           }
-          if(call_icellate){
+          if(call_icellate & nrow(new_interim[new_interim$bin == j,]) > 0){
+            if (nrow(new_interim[new_interim$bin == j,]) < number_icellate){
+              call_it <- nrow(new_interim[new_interim$bin == j,])
+            } else {
+              call_it <- number_icellate
+            }
             icellate(targetCells = new_interim[new_interim$bin == j,],
                      folderName = paste0(facet, "-", silliness, "_Bin_", j),
                      fuse = fuse_icellate,
-                     samplingNumber = number_icellate,
+                     samplingNumber = call_it,
                      lineAnalyses = F,
-                     heatIntensity = T, 
-                     saveData = "icellates/bin_data.csv")
+                     heatIntensity = T)
           }
         }
       }
@@ -200,12 +204,16 @@ smokeStack <- function(df = cells,
           magicSet[i][j,] <- NA
         }
         
-        if(call_icellate){
-          print(nrow(interim[interim$bin == j,]))
+        if(call_icellate & nrow(interim[interim$bin == j,]) > 0){
+          if (nrow(interim[interim$bin == j,]) < number_icellate){
+            call_it <- nrow(interim[interim$bin == j,])
+          } else {
+            call_it <- number_icellate
+          }
           icellate(targetCells = interim[interim$bin == j,],
                    folderName = paste0("Bin_", j),
                    fuse = fuse_icellate,
-                   samplingNumber = number_icellate,
+                   samplingNumber = call_it,
                    lineAnalyses = F, 
                    heatIntensity = T, 
                    saveData = "icellates/bin_data.csv")
@@ -249,6 +257,8 @@ smokeStack <- function(df = cells,
   }
   if(saveData != F & is.character(saveData)){
     write.csv(magicSet, saveData, row.names = F)
+  } else if (call_icellate){
+    write.csv(magicSet, "icellates/bin_data.csv", row.names = F)
   }
 }
 

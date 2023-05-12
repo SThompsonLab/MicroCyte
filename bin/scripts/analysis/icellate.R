@@ -6,7 +6,7 @@ suppressPackageStartupMessages(library(tidyr))
 icellate <- function(targetCells,
                      folderName = "singleCells",
                      dMultiplier = 0.3,
-                     verifySize = T,
+                     verifySize = F,
                      fuse = F,
                      marked = F,
                      heatIntensity = F,
