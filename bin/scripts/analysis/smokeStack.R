@@ -17,7 +17,10 @@ smokeStack <- function(df = cells,
                        saveData = F,
                        xdim = 5,
                        ydim = 0.5,
-                       viridisPallet = "inferno"){
+                       viridisPallet = "inferno",
+                       call_icellate = F, 
+                       fuse_icellate = T,
+                       number_icellate = 10){
   # Asks for a variable to bin on if one isn't given
   if (setX == F){
     print(names(df))
@@ -138,6 +141,15 @@ smokeStack <- function(df = cells,
           if(nrow(new_interim[new_interim$bin == j,]) < minBinNumber){
             interim_magic[i][j,] <- NA
           }
+          if(call_icellate){
+            icellate(targetCells = new_interim[new_interim$bin == j,],
+                     folderName = paste0(facet, "-", silliness, "_Bin_", j),
+                     fuse = fuse_icellate,
+                     samplingNumber = number_icellate,
+                     lineAnalyses = F,
+                     heatIntensity = T, 
+                     saveData = "icellates/bin_data.csv")
+          }
         }
       }
       if(!exists("dumbness")){
@@ -186,6 +198,17 @@ smokeStack <- function(df = cells,
         }
         if(nrow(interim[interim$bin == j,]) < minBinNumber){
           magicSet[i][j,] <- NA
+        }
+        
+        if(call_icellate){
+          print(nrow(interim[interim$bin == j,]))
+          icellate(targetCells = interim[interim$bin == j,],
+                   folderName = paste0("Bin_", j),
+                   fuse = fuse_icellate,
+                   samplingNumber = number_icellate,
+                   lineAnalyses = F, 
+                   heatIntensity = T, 
+                   saveData = "icellates/bin_data.csv")
         }
       }
     }

@@ -111,6 +111,7 @@ icellate <- function(targetCells,
       for (i in list.files()){
         # we load the image..
         interim_i <- load.image(i)
+
         # And convert it to a dataframe.
         interim <- as.data.frame(interim_i)
 
