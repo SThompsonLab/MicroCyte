@@ -212,7 +212,7 @@ heatmap_it_all <- function(heatmap_color = "inferno",
       print(paste0("Working in file: ", i))
       image_set <- list.files()
       for (j in image_set){
-        if (!grepl(".csv", j)){
+        if (!grepl(".csv", j) & !grepl("ratio", j) & !grepl(heatmap_color, j)){
           setwd(paste0(j, "/PNGS"))
           print(paste0("Working in image: ", j))
           final_set <- list.files(pattern = ".png")
