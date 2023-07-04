@@ -483,6 +483,8 @@ for (xL in xList){
                  wc = wcGo)
           print(paste0("Combining data from image ", yL))
         } else {
+          imaGen(peri = periGo,
+                 wc = wcGo)
           print(paste0("Combined data already detected for: ", yL))
         }
         setwd("../../")
