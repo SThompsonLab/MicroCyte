@@ -1,6 +1,7 @@
 suppressPackageStartupMessages(library(imager))
 suppressPackageStartupMessages(library(magick))
 suppressPackageStartupMessages(library(ggplot2))
+suppressPackageStartupMessages(library(stringr))
 
 heatMap_image <- function(image_location,
                           heatColor = "inferno",
@@ -195,8 +196,37 @@ heatMap_image <- function(image_location,
     newPlot <- suppressWarnings(as.cimg(thick))
     newPlot <- cimg2magick(newPlot, rotate = T)
     newPlot <- image_flop(newPlot)
-    image_location <- str_replace(image_location, ".png", "_heatMapped.png")
+    image_location <- str_replace(image_location, ".png", paste0("_",heatColor,"_HeatMapped.png"))
     image_write(newPlot, path = image_location, format = "png")
     print("Complete")
   }
+}
+
+heatmap_it_all <- function(heatmap_color = "inferno", 
+                           binned_colors = F){
+  setwd("files/")
+  folder_set <- list.files()
+  for (i in folder_set){
+    if (!grepl(".csv", i)){
+      setwd(i)
+      print(paste0("Working in file: ", i))
+      image_set <- list.files()
+      for (j in image_set){
+        if (!grepl(".csv", j)){
+          setwd(paste0(j, "/PNGS"))
+          print(paste0("Working in image: ", j))
+          final_set <- list.files(pattern = ".png")
+          for (k in final_set){
+            if (!grepl("HeatMapped", k)){
+              print(paste0("Converting: ", k))
+              suppressWarnings(heatMap_image(k, heatColor = heatmap_color, intensity_binning = binned_colors))
+            }
+          }
+          setwd("../../")
+        }
+      }
+      setwd("../")
+    }
+  }
+  setwd("../")
 }
