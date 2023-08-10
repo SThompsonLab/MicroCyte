@@ -46,7 +46,7 @@ wcTarget1Size=anchorSize;
 // If the anchor-independen box is checked, a second dialog box
 //is opened to get the other variables
 if (runWC){
-	print("Running WC");
+	// print("Running WC");
   	Dialog.create("Anchor-independent settings");
   	Dialog.addString(wcTarget2+" size range:", "1-infinity");
   	Dialog.addNumber(wcTarget2+" lower threshold:", 15);
