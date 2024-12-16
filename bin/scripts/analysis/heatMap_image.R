@@ -2,6 +2,7 @@ suppressPackageStartupMessages(library(imager))
 suppressPackageStartupMessages(library(magick))
 suppressPackageStartupMessages(library(ggplot2))
 suppressPackageStartupMessages(library(stringr))
+suppressPackageStartupMessages(library(tidyverse))
 
 heatMap_image <- function(image_location,
                           heatColor = "inferno",
