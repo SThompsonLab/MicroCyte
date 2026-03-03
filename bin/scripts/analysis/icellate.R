@@ -427,13 +427,14 @@ lineAnalysis <- function(midX,
         xlab("Relative pixel position")+
         ylab("Relative pixel intentsity")+
         theme_classic()+
-        theme(axis.line = element_line(colour = "black", linewidth = 2),
+        theme(axis.line = element_line(colour = "black", linewidth = 1.5),
+              axis.ticks = element_line(colour = "black", linewidth = 1.5),
               axis.text = element_text(face = "bold", color = "black", size = 12),
               axis.title = element_text(face = "bold", color = "black", size = 20),
               legend.position = "top")
       print(linera)
       pdfName <- strsplit(lineFile, ".csv")[[1]][1]
-      ggsave(filename = paste0("../", pdfName, ".pdf"))
+      ggsave(filename = paste0("../", pdfName, ".pdf"), height = 5, width = 5, units = "in")
     }
     setwd("../../")
   }
