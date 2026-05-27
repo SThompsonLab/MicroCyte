@@ -44,6 +44,7 @@ heatMap_image <- function(image_location,
     print("Creating binned pallet hexes.")
     fake_plot <- ggplot(data = check_gray, aes(fill=value, x=x, y=y))+
       geom_point()+
+      #scale_fill_gradient2(low = "black", mid = "darkred", high = "lightgreen", midpoint = 0.2)+
       scale_fill_viridis_b(option = heatColor)
     fake_plot <- ggplot_build(fake_plot)
     fake_plot <- as.data.frame(fake_plot$data)
@@ -153,6 +154,7 @@ heatMap_image <- function(image_location,
     print("Creating pallet hexes.")
     fake_plot <- ggplot(data = check_gray, aes(fill=value, x=x, y=y))+
       geom_point()+
+      #scale_fill_gradient2(low = "black", mid = "darkred", high = "lightgreen", midpoint = 0.5)
       scale_fill_viridis_c(option = heatColor)
     fake_plot <- ggplot_build(fake_plot)
     fake_plot <- as.data.frame(fake_plot$data)
