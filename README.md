@@ -1,6 +1,7 @@
 # MicroCyte v1.0.0
 
 Welcome to the Microcytometry workflow developed by Jason Needham out of the University of Alabama at Birmingham (2020-23)
+![Image of MicroCyte Workflow](https://github.com/SThompsonLab/MicroCyte/blob/main/MicroCyte.png)
 
 You can begin by sourcing 'microcyte.R' from within the main microcyte folder, which will allow you to run all the steps without individually sourcing the various scripts below. Before this, however, be sure to read about how these scripts work below so that you are using them correctly.
 
